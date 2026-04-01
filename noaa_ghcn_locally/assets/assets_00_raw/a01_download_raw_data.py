@@ -1,59 +1,59 @@
 """@bruin
+
 name: raw.a01_download_raw_data
 type: python
 connection: noaa_duckdb
 
 materialization:
-    type: table
-    destination: raw.noaa_ghcn
-    strategy: append
-    partition_by: year
+  type: table
+  strategy: append
+  partition_by: date
 
-partitions:
-    - name: year
-      type: range
-      value:
-        start: "2020"
-        end: "2024"
-        interval: "1y"
+secrets:
+  - key: noaa_duckdb
+    inject_as: noaa_duckdb
 
 columns:
-    - name: station_id
-      type: varchar
-      description: "Station ID"
-      checks:
-          - name: not_null
-    - name: date
-      type: timestamp
-      description: "Observation date (YYYYMMDD)"
-      checks:
-          - name: not_null
-    - name: element
-      type: varchar
-      description: "Element type (TMAX, TMIN, PRCP, etc.)"
-    - name: value
-      type: float
-      description: "Data value"
-    - name: m_flag
-      type: varchar
-      description: "Measurement flag"
-    - name: q_flag
-      type: varchar
-      description: "Quality flag"
-    - name: s_flag
-      type: varchar
-      description: "Source flag"
-    - name: obs_time
-      type: varchar
-      description: "Observation time"
-    - name: year
-      type: integer
-      description: "Year partition column"
-      checks:
-          - name: not_null
+  - name: station_id
+    type: varchar
+    description: Station ID
+    checks:
+      - name: not_null
+  - name: date
+    type: timestamp
+    description: Observation date (YYYYMMDD)
+    checks:
+      - name: not_null
+  - name: element
+    type: varchar
+    description: Element type (TMAX, TMIN, PRCP, etc.)
+  - name: value
+    type: float
+    description: Data value
+  - name: m_flag
+    type: varchar
+    description: Measurement flag
+  - name: q_flag
+    type: varchar
+    description: Quality flag
+  - name: s_flag
+    type: varchar
+    description: Source flag
+  - name: obs_date
+    type: timestamp
+    description: Observation date
+    checks:
+      - name: not_null
+  - name: obs_time
+    type: varchar
+    description: Observation time
+  - name: year
+    type: integer
+    description: Year partition column
+    checks:
+      - name: not_null
 
 @bruin"""
-
 
 import os
 import pandas as pd
@@ -82,7 +82,8 @@ def download_noaa_ghcn_data(year: int) -> pd.DataFrame | None:
             compression="gzip"
         )
         df["year"] = int(year)
-        df["date"] = pd.to_datetime(df["date"], format="%Y%m%d")
+        df["obs_date"] = df["date"].copy()
+        df["date"] = pd.to_datetime(df["obs_date"], format="%Y%m%d")
         df["value"] = df["value"].astype(float)
     except requests.exceptions.RequestException as e:
         print(f"error downloading data from {year}")
@@ -115,6 +116,11 @@ def materialize():
         print("sucessful downloaded")
         df = temp_df if df is None else pd.concat((df, temp_df), ignore_index=True)
 
+    # pandas filters the null values    
+    df = df\
+        .dropna(subset=["date", "station_id", "year", "obs_date"])\
+        .reset_index(drop=True)
+
     print("finish to download")
     print("saving data...")
-    return df 
+    return df
