@@ -40,7 +40,7 @@ columns:
     type: varchar
     description: Source flag
   - name: obs_date
-    type: timestamp
+    type: varchar
     description: Observation date
     checks:
       - name: not_null

@@ -6,8 +6,7 @@ connection: noaa_duckdb
 materialization:
     type: table
     destination: raw.stations
-    strategy: append
-    partition_by: year
+    strategy: create+replace
 
 columns:
     - name: id
