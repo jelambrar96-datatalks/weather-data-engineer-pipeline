@@ -7,6 +7,7 @@ materialization:
     type: table
     destination: raw.stations
     strategy: create+replace
+    cluster_by: ["id"]
 
 columns:
     - name: id

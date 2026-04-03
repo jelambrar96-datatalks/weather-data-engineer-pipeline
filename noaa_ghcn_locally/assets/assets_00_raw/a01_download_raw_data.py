@@ -8,6 +8,7 @@ materialization:
   type: table
   strategy: append
   partition_by: date
+  cluster_by: ["station_id", "element"]
 
 secrets:
   - key: noaa_duckdb
@@ -28,7 +29,7 @@ columns:
     type: varchar
     description: Element type (TMAX, TMIN, PRCP, etc.)
   - name: value
-    type: float
+    type: varchar
     description: Data value
   - name: m_flag
     type: varchar
@@ -84,7 +85,6 @@ def download_noaa_ghcn_data(year: int) -> pd.DataFrame | None:
         df["year"] = int(year)
         df["obs_date"] = df["date"].copy()
         df["date"] = pd.to_datetime(df["obs_date"], format="%Y%m%d")
-        df["value"] = df["value"].astype(float)
     except requests.exceptions.RequestException as e:
         print(f"error downloading data from {year}")
         print(e)

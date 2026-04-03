@@ -8,6 +8,7 @@ materialization:
     strategy: create+replace
     destination: raw.noaa_ghcn
     partition_by: date
+    cluster_by: ["station_id", "element"]
 
 columns:
   - name: station_id
@@ -24,7 +25,7 @@ columns:
     type: varchar
     description: Element type (TMAX, TMIN, PRCP, etc.)
   - name: value
-    type: float
+    type: varchar
     description: Data value
   - name: m_flag
     type: varchar
@@ -52,7 +53,7 @@ SELECT
     CAST(NULL AS VARCHAR) AS station_id,
     CAST(NULL AS TIMESTAMP) AS date,
     CAST(NULL AS VARCHAR) AS element,
-    CAST(NULL AS FLOAT) AS value,
+    CAST(NULL AS VARCHAR) AS value,
     CAST(NULL AS VARCHAR) AS m_flag,
     CAST(NULL AS VARCHAR) AS q_flag,
     CAST(NULL AS VARCHAR) AS s_flag,
