@@ -1,0 +1,22 @@
+default_environment: default
+environments:
+  default:
+    connections:
+      duckdb:
+        - name: noaa_duckdb
+          path: <DUCKDB_DATABASE>
+        - name: duckdb-default
+          path: duckdb.db
+      motherduck:
+        - name: noaa_motherduck
+          token: <MOTHERDUCK_TOKEN>
+          database: noaa_database
+  dev:
+    connections:
+      duckdb:
+        - name: noaa_duckdb
+          path: <DUCKDB_DATABASE>
+      motherduck:
+        - name: noaa_motherduck
+          token: <MOTHERDUCK_TOKEN>
+          database: noaa_database
