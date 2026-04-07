@@ -10,6 +10,7 @@ import os
 import logging
 
 from datetime import datetime, timedelta
+from functools import lru_cache
 
 import duckdb
 import pandas as pd
@@ -53,7 +54,7 @@ def get_date_range(conn):
     """).fetchone()
     return result[0], result[1]
 
-
+@lru_cache
 def get_temperature_data(conn, start_date, end_date):
     """Get average temperature over time."""
     query = """
@@ -69,22 +70,22 @@ def get_temperature_data(conn, start_date, end_date):
     """
     return conn.execute(query, [start_date, end_date]).fetchdf()
 
-
+@lru_cache
 def get_precipitation_data(conn, start_date, end_date):
-    """Get precipitation and snow depth data."""
+    """Get precipitation and snow fall data."""
     query = """
         SELECT
-            date::date as date,
-            AVG(SNWD) as avg_snow_depth,
+            date_trunc('month', date)::date as month,
+            AVG(SNOW) as avg_snow_fall,
             AVG(PRCP) as avg_precip
         FROM report.a01_temp_report
         WHERE date >= ? AND date <= ?
-        GROUP BY date::date
-        ORDER BY date
+        GROUP BY month
+        ORDER BY month
     """
     return conn.execute(query, [start_date, end_date]).fetchdf()
 
-
+@lru_cache
 def get_latest_stations_data(conn, end_date):
     """Get latest temperature data for each station at the end date."""
     query = """
@@ -98,7 +99,9 @@ def get_latest_stations_data(conn, end_date):
                 date,
                 ROW_NUMBER() OVER (PARTITION BY station_id ORDER BY date DESC) as rn
             FROM report.a01_temp_report
-            WHERE date <= ?
+            WHERE 1 = 1
+            AND TAVG IS NOT NULL
+            AND date <= ?
         )
         SELECT
             station_id,
@@ -195,15 +198,15 @@ def main():
         st.subheader("Precipitation and Snow Depth")
         fig_precip = go.Figure()
         fig_precip.add_trace(go.Bar(
-            x=precip_data["date"],
+            x=precip_data["month"],
             y=precip_data["avg_precip"],
             name="Precipitation (PRCP)",
             marker_color="blue"
         ))
         fig_precip.add_trace(go.Bar(
-            x=precip_data["date"],
-            y=precip_data["avg_snow_depth"],
-            name="Snow Depth (SNWD)",
+            x=precip_data["month"],
+            y=precip_data["avg_snow_fall"],
+            name="Snow Fall (SNOW)",
             marker_color="white",
             marker_line_color="gray",
             marker_line_width=1
