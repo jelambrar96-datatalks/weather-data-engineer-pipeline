@@ -5,44 +5,72 @@ connection: noaa_duckdb
 
 materialization:
     type: table
-    destination: raw.stations
     strategy: create+replace
     cluster_by: ["id"]
+description: "Downloads and parses the NOAA GHCN stations metadata from S3."
+owner: "jelambrar@gmail.com"
+
 
 columns:
     - name: id
       type: string
-      description: "Station ID"
+      description: "the station identification code"
       checks:
           - name: not_null
+          - name: unique
+      primary_key: true
     - name: latitude
       type: float
-      description: "Latitude"
+      description: "latitude of the station (in decimal degrees)."
       checks:
           - name: not_null
+          - min: -90.0
+          - max: 90.0
     - name: longitude
       type: float
-      description: "Longitude"
+      description: "longitude of the station (in decimal degrees)."
       checks:
           - name: not_null
+          - min: -180.0
+          - max: 180.0
     - name: elevation
       type: float
-      description: "Elevation"
+      description: "elevation of the station in meters."
+      checks:
+          - name: min
+            value: -1000
     - name: state
       type: string
-      description: "State"
+      description: "U.S. postal code for the state (for U.S. and Canadian stations only)."
+      checks:
+          - name: pattern
+            value: "^[a-zA-Z0-9]+$"
     - name: name
       type: string
-      description: "Station Name"
+      description: "name of the station"
+      checks:
+          - name: not_null
     - name: gsn_flag
       type: string
-      description: "GSN Flag"
+      description: "GSN Flag - Indicates membership in the Global Historical Climatology Network (GHCN). Possible values: Blank (not a member), Y (member)"
+      checks:
+          - name: pattern
+            value: "^(GSN|)$"
     - name: hcn_crn_flag
       type: string
-      description: "HCN/CRN Flag"
+      description: "HCN/CRN Flag - Indicates membership in U.S. Historical Climatology Network (HCN) or Climate Reference Network (CRN). Possible values: Blank (not a member), HCN (Historical Climatology Network), CRN (Climate Reference Network or Regional Climate Network)"
+      checks:
+          - name: pattern
+            value: "^(HCN|CRN|)$"
     - name: wmo_id
       type: string
       description: "WMO ID"
+
+custom_checks:
+    - name: at least 10k stations
+      description: "Ensure the stations table has at least 100,000 records"
+      query: "SELECT count(*) >= 10000 FROM raw.a02_download_station"
+      value: 1
 @bruin"""
 
 
