@@ -66,6 +66,8 @@ def download_noaa_ghcn_data(year: int) -> pd.DataFrame | None:
     df = None
     try:
         source_url = f"https://noaa-ghcn-pds.s3.amazonaws.com/csv.gz/{year}.csv.gz"
+        print("source:")
+        print(source_url)
         df = pd.read_csv(
             source_url, 
             header=None,

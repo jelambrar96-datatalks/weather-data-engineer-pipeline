@@ -14,6 +14,9 @@ columns:
   - name: station_id
     type: varchar
     description: Station ID
+  - name: station_name
+    type: varchar
+    description: Station name
   - name: latitude
     type: float
     description: Station latitude
@@ -23,6 +26,21 @@ columns:
   - name: altitude
     type: float
     description: Station altitude (elevation)
+  - name: province
+    type: varchar
+    description: Province name
+  - name: country
+    type: varchar
+    description: Country name
+  - name: iso_code
+    type: varchar
+    description: ISO code
+  - name: iso_cc
+    type: varchar
+    description: ISO country code
+  - name: iso_sub
+    type: varchar
+    description: ISO subdivision code
   - name: date
     type: timestamp
     description: Observation date
@@ -48,9 +66,15 @@ columns:
 
 SELECT
     s.id AS station_id,
+    s.name AS station_name,
     s.latitude,
     s.longitude,
     s.elevation AS altitude,
+    s.province,
+    s.country,
+    s.iso_code,
+    s.iso_cc,
+    s.iso_sub,
     t.date,
     t.TMIN,
     t.TMAX,
@@ -58,5 +82,5 @@ SELECT
     t.PRCP,
     t.SNOW,
     t.SNWD
-FROM raw.a02_download_station s
+FROM staging.a03_stations s
 JOIN staging.a02_pivot_transformed_data t ON s.id = t.station_id

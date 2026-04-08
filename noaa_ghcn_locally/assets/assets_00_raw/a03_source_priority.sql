@@ -5,7 +5,6 @@ connection: noaa_duckdb
 
 materialization:
   type: table
-  destination: raw.source_priority
   strategy: create+replace
   partition_by: source
 
