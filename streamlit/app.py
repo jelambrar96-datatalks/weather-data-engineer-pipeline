@@ -55,7 +55,46 @@ def get_date_range(conn):
     return result[0], result[1]
 
 @lru_cache
-def get_temperature_data(conn, start_date, end_date):
+def get_countries(conn):
+    """Get unique countries from the dataset."""
+    result = conn.execute("""
+        SELECT DISTINCT country 
+        FROM staging.a03_stations 
+        WHERE country IS NOT NULL 
+        ORDER BY country
+    """).fetchdf()
+    return ["All"] + result["country"].tolist()
+
+@lru_cache
+def get_provinces(conn, country):
+    """Get unique provinces for a selected country."""
+    if country == "All":
+        return ["All"]
+    result = conn.execute("""
+        SELECT DISTINCT province 
+        FROM staging.a03_stations 
+        WHERE country = ? AND province IS NOT NULL 
+        ORDER BY province
+    """, [country]).fetchdf()
+    return ["All"] + result["province"].tolist()
+
+@lru_cache
+def get_stations(conn, country, province):
+    """Get unique station names filtered by country and province."""
+    query = "SELECT DISTINCT name AS station_name FROM staging.a03_stations WHERE name IS NOT NULL"
+    params = []
+    if country != "All":
+        query += " AND country = ?"
+        params.append(country)
+    if province != "All":
+        query += " AND province = ?"
+        params.append(province)
+    query += " ORDER BY station_name"
+    result = conn.execute(query, params).fetchdf()
+    return ["All"] + result["station_name"].tolist()
+
+@lru_cache
+def get_temperature_data(conn, start_date, end_date, country="All", province="All", station_name="All"):
     """Get average temperature over time."""
     query = """
         SELECT
@@ -65,13 +104,26 @@ def get_temperature_data(conn, start_date, end_date):
             AVG(TMAX) as max_temp
         FROM report.a01_temp_report
         WHERE date >= ? AND date <= ?
+    """
+    params = [start_date, end_date]
+    if country != "All":
+        query += " AND country = ?"
+        params.append(country)
+    if province != "All":
+        query += " AND province = ?"
+        params.append(province)
+    if station_name != "All":
+        query += " AND station_name = ?"
+        params.append(station_name)
+    
+    query += """
         GROUP BY date::date
         ORDER BY date
     """
-    return conn.execute(query, [start_date, end_date]).fetchdf()
+    return conn.execute(query, params).fetchdf()
 
 @lru_cache
-def get_precipitation_data(conn, start_date, end_date):
+def get_precipitation_data(conn, start_date, end_date, country="All", province="All", station_name="All"):
     """Get precipitation and snow fall data."""
     query = """
         SELECT
@@ -80,18 +132,32 @@ def get_precipitation_data(conn, start_date, end_date):
             AVG(PRCP) as avg_precip
         FROM report.a01_temp_report
         WHERE date >= ? AND date <= ?
+    """
+    params = [start_date, end_date]
+    if country != "All":
+        query += " AND country = ?"
+        params.append(country)
+    if province != "All":
+        query += " AND province = ?"
+        params.append(province)
+    if station_name != "All":
+        query += " AND station_name = ?"
+        params.append(station_name)
+
+    query += """
         GROUP BY month
         ORDER BY month
     """
-    return conn.execute(query, [start_date, end_date]).fetchdf()
+    return conn.execute(query, params).fetchdf()
 
 @lru_cache
-def get_latest_stations_data(conn, end_date):
+def get_latest_stations_data(conn, end_date, country="All", province="All", station_name="All"):
     """Get latest temperature data for each station at the end date."""
     query = """
         WITH latest_data AS (
             SELECT
                 station_id,
+                station_name,
                 latitude,
                 longitude,
                 altitude,
@@ -99,12 +165,25 @@ def get_latest_stations_data(conn, end_date):
                 date,
                 ROW_NUMBER() OVER (PARTITION BY station_id ORDER BY date DESC) as rn
             FROM report.a01_temp_report
-            WHERE 1 = 1
-            AND TAVG IS NOT NULL
+            WHERE TAVG IS NOT NULL
             AND date <= ?
+    """
+    params = [end_date]
+    if country != "All":
+        query += " AND country = ?"
+        params.append(country)
+    if province != "All":
+        query += " AND province = ?"
+        params.append(province)
+    if station_name != "All":
+        query += " AND station_name = ?"
+        params.append(station_name)
+
+    query += """
         )
         SELECT
             station_id,
+            station_name,
             latitude,
             longitude,
             altitude,
@@ -114,7 +193,7 @@ def get_latest_stations_data(conn, end_date):
           AND latitude IS NOT NULL
           AND longitude IS NOT NULL
     """
-    return conn.execute(query, [end_date]).fetchdf()
+    return conn.execute(query, params).fetchdf()
 
 
 def main():
@@ -136,6 +215,28 @@ def main():
 
     min_date, max_date = get_date_range(conn)
 
+    st.sidebar.header("Geography & Station Filters")
+    
+    # Country filter
+    countries = get_countries(conn)
+    selected_country = st.sidebar.selectbox("Country", options=countries, index=0)
+    
+    # Province filter (hierarchical)
+    provinces = get_provinces(conn, selected_country)
+    is_province_disabled = (selected_country == "All")
+    selected_province = st.sidebar.selectbox(
+        "Province", 
+        options=provinces, 
+        index=0, 
+        disabled=is_province_disabled,
+        help="Select a country first to enable province filtering"
+    )
+    
+    # Station filter
+    stations = get_stations(conn, selected_country, selected_province)
+    selected_station = st.sidebar.selectbox("Station Name", options=stations, index=0)
+
+    st.sidebar.divider()
     st.sidebar.header("Time Range Selection")
     start_date = st.sidebar.date_input(
         "Start Date",
@@ -155,11 +256,21 @@ def main():
         st.stop()
 
     with st.spinner("Loading data..."):
-        temp_data = get_temperature_data(conn, start_date, end_date)
-        precip_data = get_precipitation_data(conn, start_date, end_date)
+        temp_data = get_temperature_data(
+            conn, start_date, end_date, 
+            country=selected_country, 
+            province=selected_province, 
+            station_name=selected_station
+        )
+        precip_data = get_precipitation_data(
+            conn, start_date, end_date,
+            country=selected_country, 
+            province=selected_province, 
+            station_name=selected_station
+        )
 
     if temp_data.empty:
-        st.warning("No temperature data available for the selected time range.")
+        st.warning("No temperature data available for the selected filters.")
     else:
         st.subheader("Temperature Over Time")
         fig_temp = go.Figure()
@@ -192,7 +303,7 @@ def main():
         st.plotly_chart(fig_temp, use_container_width=True)
 
     if precip_data.empty:
-        st.warning("No precipitation data available for the selected time range.")
+        st.warning("No precipitation data available for the selected filters.")
     else:
         st.subheader("Precipitation and Snow Depth")
         fig_precip = go.Figure()
@@ -231,7 +342,12 @@ def main():
     )
 
     with st.spinner("Loading map data..."):
-        map_data = get_latest_stations_data(conn, map_date)
+        map_data = get_latest_stations_data(
+            conn, map_date,
+            country=selected_country,
+            province=selected_province,
+            station_name=selected_station
+        )
 
     if map_data.empty:
         st.warning(f"No station data available for the selected date: {map_date}")
