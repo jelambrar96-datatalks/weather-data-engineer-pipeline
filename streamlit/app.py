@@ -157,7 +157,6 @@ def main():
     with st.spinner("Loading data..."):
         temp_data = get_temperature_data(conn, start_date, end_date)
         precip_data = get_precipitation_data(conn, start_date, end_date)
-        map_data = get_latest_stations_data(conn, end_date)
 
     if temp_data.empty:
         st.warning("No temperature data available for the selected time range.")
@@ -190,7 +189,7 @@ def main():
             yaxis_title="Temperature",
             hovermode="x unified"
         )
-        st.plotly_chart(fig_temp, width='stretch')
+        st.plotly_chart(fig_temp, use_container_width=True)
 
     if precip_data.empty:
         st.warning("No precipitation data available for the selected time range.")
@@ -217,12 +216,27 @@ def main():
             barmode="stack",
             hovermode="x unified"
         )
-        st.plotly_chart(fig_precip, width='stretch')
+        st.plotly_chart(fig_precip, use_container_width=True)
+
+    st.divider()
+    st.subheader("Weather Map View")
+    
+    # Map specific date slider
+    map_date = st.slider(
+        "Select Date for Map Data",
+        min_value=min_date,
+        max_value=max_date,
+        value=end_date,
+        help="Use this slider to see the status of all stations on a specific date."
+    )
+
+    with st.spinner("Loading map data..."):
+        map_data = get_latest_stations_data(conn, map_date)
 
     if map_data.empty:
-        st.warning("No station data available for the selected end date.")
+        st.warning(f"No station data available for the selected date: {map_date}")
     else:
-        st.subheader(f"Station Temperatures (as of {end_date})")
+        st.markdown(f"**Station Temperatures (as of {map_date})**")
         fig_map = px.scatter_map(
             map_data,
             lat="latitude",
@@ -239,7 +253,7 @@ def main():
             map_style="carto-positron",
             margin={"r": 0, "t": 30, "l": 0, "b": 0}
         )
-        st.plotly_chart(fig_map, width='stretch')
+        st.plotly_chart(fig_map, use_container_width=True)
 
         col1, col2, col3 = st.columns(3)
         with col1:
