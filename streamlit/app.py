@@ -16,6 +16,7 @@ import duckdb
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import pydeck as pdk
 import streamlit as st
 
 from dotenv import load_dotenv
@@ -93,7 +94,7 @@ def get_stations(conn, country, province):
     result = conn.execute(query, params).fetchdf()
     return ["All"] + result["station_name"].tolist()
 
-@lru_cache
+@lru_cache(maxsize=32)
 def get_temperature_data(conn, start_date, end_date, country="All", province="All", station_name="All"):
     """Get average temperature over time."""
     query = """
@@ -122,7 +123,7 @@ def get_temperature_data(conn, start_date, end_date, country="All", province="Al
     """
     return conn.execute(query, params).fetchdf()
 
-@lru_cache
+@lru_cache(maxsize=32)
 def get_precipitation_data(conn, start_date, end_date, country="All", province="All", station_name="All"):
     """Get precipitation and snow fall data."""
     query = """
@@ -150,7 +151,7 @@ def get_precipitation_data(conn, start_date, end_date, country="All", province="
     """
     return conn.execute(query, params).fetchdf()
 
-@lru_cache
+@lru_cache(maxsize=32)
 def get_latest_stations_data(conn, end_date, country="All", province="All", station_name="All"):
     """Get latest temperature data for each station at the end date."""
     query = """
@@ -193,6 +194,58 @@ def get_latest_stations_data(conn, end_date, country="All", province="All", stat
           AND latitude IS NOT NULL
           AND longitude IS NOT NULL
     """
+    return conn.execute(query, params).fetchdf()
+
+
+@lru_cache(maxsize=32)
+def get_weather_report_data(conn, end_date, country="All", province="All", station_name="All", limit=None):
+    """Get weather classification data for each station at the end date."""
+    query = """
+        WITH latest_data AS (
+            SELECT
+                station_id,
+                station_name,
+                latitude,
+                longitude,
+                altitude,
+                weather_symbol,
+                climate_code,
+                TAVG,
+                date,
+                ROW_NUMBER() OVER (PARTITION BY station_id ORDER BY date DESC) as rn
+            FROM report.a02_weather_report
+            WHERE date <= ?
+    """
+
+    params = [end_date]
+    if country != "All":
+        query += " AND country = ?"
+        params.append(country)
+    if province != "All":
+        query += " AND province = ?"
+        params.append(province)
+    if station_name != "All":
+        query += " AND station_name = ?"
+        params.append(station_name)
+
+    query += """
+        )
+        SELECT
+            station_id,
+            station_name,
+            latitude,
+            longitude,
+            altitude,
+            weather_symbol,
+            climate_code,
+            TAVG as temperature
+        FROM latest_data
+        WHERE rn = 1
+          AND latitude IS NOT NULL
+          AND longitude IS NOT NULL
+    """
+    if limit:
+        query += f" ORDER BY random() LIMIT {limit}"
     return conn.execute(query, params).fetchdf()
 
 
@@ -384,6 +437,82 @@ def main():
                 st.metric("Temp Range", f"{min_temp:.1f} to {max_temp:.1f}")
             else:
                 st.metric("Temp Range", "N/A")
+
+    st.divider()
+    st.subheader("Weather Icon Map")
+    
+    # Use the same map_date slider as above
+    st.info(f"Showing weather conditions for: {map_date}")
+
+    with st.spinner("Loading weather icons..."):
+        weather_data = get_weather_report_data(
+            conn, map_date,
+            country=selected_country,
+            province=selected_province,
+            station_name=selected_station,
+            limit=1000
+        )
+
+    if weather_data.empty:
+        st.warning(f"No weather report data available for the selected date: {map_date}")
+    else:
+        # Define icon configuration
+        icon_url_prefix = "https://raw.githubusercontent.com/jelambrar96/weather-data-engineer-pipeline/main/streamlit/assets/weather_icons/"
+        
+        # Local path mapping for pydeck IconLayer
+        # Using URL for better compatibility in different environments, fallback to local if needed
+        ICON_MAPPING = {
+            7: "snowflake.png",
+            6: "snowy.png",
+            5: "snowflake.png", # Snowy on ground
+            4: "storm.png",
+            3: "rainy.png",
+            2: "cloudy_drop.png",
+            1: "warm.png",
+            0: "sun.png",
+            -1: "cold.png",
+            -2: "cold.png",
+            None: "cloud.png"
+        }
+
+        # Prepare data for pydeck
+        weather_data["icon_file"] = weather_data["climate_code"].map(ICON_MAPPING).fillna("cloud.png")
+        
+        # We need to construct the full path/URL for the icon
+        # In Streamlit, local images in 'assets' can be tricky for pydeck if not served via static
+        # For now, let's try local path relative to app.py
+        weather_data["icon_data"] = weather_data["icon_file"].apply(lambda x: {
+            "url": f"https://raw.githubusercontent.com/jelambrar96-datatalks/weather-data-engineer-pipeline/main/streamlit/assets/weather_icons/{x}",
+            "width": 128,
+            "height": 128,
+            "anchorY": 128
+        })
+
+        icon_layer = pdk.Layer(
+            "IconLayer",
+            data=weather_data,
+            get_icon="icon_data",
+            get_size=4,
+            size_scale=10,
+            get_position=["longitude", "latitude"],
+            pickable=True,
+        )
+
+        view_state = pdk.ViewState(
+            latitude=weather_data["latitude"].mean(),
+            longitude=weather_data["longitude"].mean(),
+            zoom=3,
+            pitch=0,
+        )
+
+        r = pdk.Deck(
+            layers=[icon_layer],
+            initial_view_state=view_state,
+            tooltip={"text": "{station_name}\nStatus: {weather_symbol}\nTemp: {temperature}°C"},
+            map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+        )
+        
+        st.pydeck_chart(r)
 
     conn.close()
 
