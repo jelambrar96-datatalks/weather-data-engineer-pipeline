@@ -2,6 +2,8 @@
 name: staging.a03_stations
 type: python
 connection: noaa_duckdb
+description: "Staging table for stations dataset"
+owner: "jelambrar@gmail.com"
 
 materialization:
     type: table
@@ -22,6 +24,7 @@ columns:
       description: "Station ID"
       checks:
           - name: not_null
+      primary_key: true
     - name: latitude
       type: float
       description: "Latitude"
@@ -72,6 +75,11 @@ columns:
       description: "ISO subdivision code"
       checks:
         - name: not_null
+
+custom_checks:
+  - name: all rows are unique
+    query: "SELECT case when count (*) = count(DISTINCT id) then 1 else 0 end as result FROM staging.a03_stations"
+    value: 1
 @bruin"""
 
 
