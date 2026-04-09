@@ -30,17 +30,29 @@ columns:
       description: "Latitude"
       checks:
           - name: not_null
+          - name: min
+            value: -90
+          - name: max
+            value: 90
     - name: longitude
       type: float
       description: "Longitude"
       checks:
           - name: not_null
+          - name: min
+            value: -180
+          - name: max
+            value: 180
     - name: elevation
       type: float
       description: "Elevation"
+          - name: min
+            value: -1000
     - name: name
       type: varchar
       description: "Station Name"
+      checks: 
+          - name: not_null
     - name: gsn_flag
       type: varchar
       description: "GSN Flag"
