@@ -10,11 +10,21 @@ materialization:
   partition_by: date
   cluster_by: ["station_id", "element"]
 
+description: "Downloads the raw weather data from NOAA GHCN for a given year."
+owner: "jelambrar@gmail.com"
+
 secrets:
   - key: noaa_duckdb
     inject_as: noaa_duckdb
 
 columns:
+  - name: id
+    type: varchar
+    description: Unique identifier for the record
+    checks:
+      - name: not_null
+      - name: unique
+    primary_key: true
   - name: station_id
     type: varchar
     description: Station ID
@@ -28,35 +38,58 @@ columns:
   - name: element
     type: varchar
     description: Element type (TMAX, TMIN, PRCP, etc.)
+    checks:
+      - name: not_null
   - name: value
     type: varchar
     description: Data value
+    checks:
+      - name: not_null
   - name: m_flag
     type: varchar
     description: Measurement flag
+    checks:
+      - name: pattern
+        value: "^[A-Z]*$"
   - name: q_flag
     type: varchar
     description: Quality flag
+    checks:
+      - name: pattern
+        value: "^[A-Z]*$"
   - name: s_flag
     type: varchar
     description: Source flag
+    checks:
+      - name: pattern
+        value: "^[a-zA-Z0-9]*$"
   - name: obs_date
     type: varchar
     description: Observation date
     checks:
       - name: not_null
+      - name: pattern
+        value: "^[0-9]{8}$"
   - name: obs_time
     type: varchar
     description: Observation time
+    checks:
+      - name: pattern
+        value: "^[0-9]{4}$"
   - name: year
     type: integer
     description: Year partition column
     checks:
       - name: not_null
+      - name: min
+        value: 1800
+      - name: max
+        value: 2100 
 
 @bruin"""
 
 import os
+import uuid
 import pandas as pd
 import requests
 
@@ -87,6 +120,7 @@ def download_noaa_ghcn_data(year: int) -> pd.DataFrame | None:
         df["year"] = int(year)
         df["obs_date"] = df["date"].copy()
         df["date"] = pd.to_datetime(df["obs_date"], format="%Y%m%d")
+        df["id"] = [str(uuid.uuid4()) for _ in range(len(df))]
     except requests.exceptions.RequestException as e:
         print(f"error downloading data from {year}")
         print(e)
