@@ -56,12 +56,21 @@ columns:
     - name: gsn_flag
       type: varchar
       description: "GSN Flag"
+      checks:
+        - name: pattern
+          value: "^(GSN|)$"
     - name: hcn_crn_flag
       type: varchar
       description: "HCN/CRN Flag"
+      checks:
+        - name: pattern
+          value: "^(HCN|CRN|)$"
     - name: wmo_id
       type: varchar
       description: "WMO ID"
+      checks:
+        - name: pattern
+          value: "^[0-9]*$"
     - name: province
       type: varchar
       description: "Province name"
