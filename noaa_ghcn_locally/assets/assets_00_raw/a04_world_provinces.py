@@ -2,6 +2,8 @@
 name: raw.a04_world_provinces
 type: python
 connection: noaa_duckdb
+description: "World provinces (admin-1) dataset from Natural Earth in GeoJSON format"
+owner: "jelambrar@gmail.com"
 
 materialization:
     type: table
@@ -14,6 +16,7 @@ columns:
       description: "Feature ID"
       checks:
         - name: not_null
+      primary_key: true
     - name: object_id
       type: integer
       description: "Object ID"
@@ -49,6 +52,11 @@ columns:
       description: "Geometry in GeoJSON format"
       checks:
         - name: not_null
+
+custom_checks:
+  - name: all rows are unique
+    query: "SELECT case when count (*) = count(DISTINCT f_id) then 1 else 0 end as result FROM raw.a04_world_provinces"
+    value: 1
 @bruin"""
 
 import json
