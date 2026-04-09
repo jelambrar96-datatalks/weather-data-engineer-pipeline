@@ -2,23 +2,37 @@
 name: raw.a03_source_priority
 type: duckdb.sql
 connection: noaa_duckdb
+description: "Source priority table for GHCN-D data"
+owner: "jelambrar@gmail.com"
 
 materialization:
   type: table
   strategy: create+replace
-  partition_by: source
+  cluster_by: ["priority"]
 
 columns:
     - name: source
       type: varchar
       description: "Source of the data"
+      primary_key: true
       checks:
         - name: not_null
+        - name: unique
     - name: priority
       type: integer
       description: "Priority of the source"
       checks:
         - name: not_null
+        - name: min
+          value: 1
+        - name: max
+          value: 28
+        - name: unique
+
+custom_checks:
+  - name: all rows are unique
+    query: "SELECT case when count (*) = count(DISTINCT source) then 1 else 0 end as result FROM raw.a03_source_priority"
+    value: 1
 @bruin */
 
 
