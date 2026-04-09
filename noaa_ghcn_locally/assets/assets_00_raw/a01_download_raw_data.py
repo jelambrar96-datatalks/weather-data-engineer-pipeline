@@ -86,6 +86,12 @@ columns:
       - name: max
         value: 2100 
 
+custom_checks:
+  - name: at least 10k stations
+    description: "Ensure the stations table has at least 100,000 records"
+    query: "SELECT count(*) >= 10000 FROM raw.a01_download_raw_data"
+    value: 1
+
 @bruin"""
 
 import os
