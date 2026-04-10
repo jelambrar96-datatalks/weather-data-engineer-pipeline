@@ -114,7 +114,7 @@ columns:
     description: Weather symbol
     checks:
       - name: accepted_values
-        values: ['❄️🌨️ Heavy snow', '🌨️ Moderate snow', '⛄ Snow on ground', '⛈️ Heavy rain', '🌧️ Moderate rain', '🌦️ Light rain', '☀️🌡️ Hot', '☀️ Sunny', '🌤️ Cold and clear', '🥶 Below freezing', '❓ Unclassified']
+        value: ['❄️🌨️ Heavy snow', '🌨️ Moderate snow', '⛄ Snow on ground', '⛈️ Heavy rain', '🌧️ Moderate rain', '🌦️ Light rain', '☀️🌡️ Hot', '☀️ Sunny', '🌤️ Cold and clear', '🥶 Below freezing', '❓ Unclassified']
   - name: climate_code
     type: int
     description: Climate code
