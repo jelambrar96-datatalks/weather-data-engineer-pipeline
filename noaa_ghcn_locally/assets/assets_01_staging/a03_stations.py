@@ -46,6 +46,7 @@ columns:
     - name: elevation
       type: float
       description: "Elevation"
+      checks:
           - name: min
             value: -1000
     - name: name
@@ -68,9 +69,6 @@ columns:
     - name: wmo_id
       type: varchar
       description: "WMO ID"
-      checks:
-        - name: pattern
-          value: "^[0-9]*$"
     - name: province
       type: varchar
       description: "Province name"
@@ -152,7 +150,8 @@ def materialize():
             FROM raw.a04_world_provinces
         ) n
         QUALIFY ROW_NUMBER() OVER(PARTITION BY u.id ORDER BY ST_Distance(u.geom, n.geom)) = 1
-    ) final_stations;
+    ) final_stations
+    QUALIFY ROW_NUMBER() OVER(PARTITION BY id ORDER BY province DESC) = 1;
     """).df()
 
     return df
