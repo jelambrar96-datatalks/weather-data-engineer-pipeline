@@ -15,6 +15,12 @@ depends:
   - staging.a01_pivot_data
 
 columns:
+  - name: id
+    type: integer
+    description: Unique identifier
+    checks:
+      - name: not_null
+    primary_key: true
   - name: date
     type: timestamp
     description: Observation date
@@ -634,7 +640,9 @@ combined AS (
         ON b.date = m.date AND b.station_id = m.station_id
 )
 
-SELECT *
+SELECT 
+    ROW_NUMBER() OVER (ORDER BY station_id, date) AS id,
+    *
 FROM combined
 WHERE date IS NOT NULL
   AND station_id IS NOT NULL
