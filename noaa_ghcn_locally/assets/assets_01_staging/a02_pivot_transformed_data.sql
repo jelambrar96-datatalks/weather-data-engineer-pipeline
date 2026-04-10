@@ -2,6 +2,8 @@
 name: staging.a02_pivot_transformed_data
 type: duckdb.sql
 connection: noaa_duckdb
+description: Pivot transformed data from staging.a01_pivot_data
+owner: "jelambrar@gmail.com"
 
 materialization:
   type: table
@@ -26,210 +28,407 @@ columns:
   - name: PRCP
     type: float
     description: Precipitation (mm)
+    checks:
+      - name: min
+        value: 0
   - name: SNOW
     type: float
     description: Snowfall (mm)
+    checks:
+      - name: min
+        value: 0
   - name: SNWD
     type: float
     description: Snow depth (mm)
+    checks:
+      - name: min
+        value: 0
   - name: TMAX
     type: float
     description: Maximum temperature (degrees C)
+    checks:
+      - name: min
+        value: -100
   - name: TMIN
     type: float
     description: Minimum temperature (degrees C)
+    checks:
+      - name: min
+        value: -100
   - name: ACMC
     type: float
     description: Average cloudiness midnight to midnight from 30-second ceilometer data (percent)
+    checks:
+      - name: min
+        value: 0
   - name: ACMH
     type: float
     description: Average cloudiness midnight to midnight from manual observations (percent)
+    checks:
+      - name: min
+        value: 0
   - name: ACSC
     type: float
     description: Average cloudiness sunrise to sunset from 30-second ceilometer data (percent)
+    checks:
+      - name: min
+        value: 0
   - name: ACSH
     type: float
     description: Average cloudiness sunrise to sunset from manual observations (percent)
+    checks:
+      - name: min
+        value: 0
   - name: AWDR
     type: float
     description: Average daily wind direction (degrees)
+    checks:
+      - name: min
+        value: 0
   - name: AWND
     type: float
     description: Average daily wind speed (meters per second)
+    checks:
+      - name: min
+        value: 0
   - name: EVAP
     type: float
     description: Evaporation of water from evaporation pan (mm)
+    checks:
+      - name: min
+        value: 0
   - name: FMTM
     type: varchar
     description: Time of fastest mile or fastest 1-minute wind (hours and minutes, i.e., HHMM)
   - name: FRGB
     type: float
     description: Base of frozen ground layer (cm)
+    checks:
+      - name: min
+        value: 0
   - name: FRGT
     type: float
     description: Top of frozen ground layer (cm)
+    checks:
+      - name: min
+        value: 0
   - name: FRTH
     type: float
     description: Thickness of frozen ground layer (cm)
+    checks:
+      - name: min
+        value: 0
   - name: GAHT
     type: float
     description: Difference between river and gauge height (cm)
+    checks:
+      - name: min
+        value: 0
   - name: MDEV
     type: float
     description: Distributed daily evaporation from multiday total (mm)
+    checks:
+      - name: min
+        value: 0
   - name: MDPR
     type: float
     description: Distributed daily precipitation from multiday total (mm)
+    checks:
+      - name: min
+        value: 0
   - name: MDSF
     type: float
     description: Distributed daily snowfall from multiday total (mm)
+    checks:
+      - name: min
+        value: 0
   - name: MDTN
     type: float
     description: Distributed daily minimum temperature from multiday total (degrees C)
+    checks:
+      - name: min
+        value: -100
   - name: MDTX
     type: float
     description: Distributed daily maximum temperature from multiday total (degrees C)
+    checks:
+      - name: min
+        value: -100
   - name: MDWM
     type: float
     description: Distributed daily wind movement from multiday total (km)
+    checks:
+      - name: min
+        value: 0
   - name: MNPN
     type: float
     description: Daily minimum temperature of water in an evaporation pan (degrees C)
+    checks:
+      - name: min
+        value: -100
   - name: MXPN
     type: float
     description: Daily maximum temperature of water in an evaporation pan (degrees C)
+    checks:
+      - name: min
+        value: -100
   - name: PGTM
     type: varchar
     description: Peak gust time (hours and minutes, i.e., HHMM)
   - name: PSUN
     type: float
     description: Daily percent of possible sunshine (percent)
+    checks:
+      - name: min
+        value: 0
+      - name: max
+        value: 100
   - name: TAVG
     type: float
     description: Average temperature (degrees C)
+    checks:
+      - name: min
+        value: -100
   - name: THIC
     type: float
     description: Thickness of ice on water (mm)
+    checks:
+      - name: min
+        value: 0
   - name: TOBS
     type: float
     description: Temperature at the time of observation (degrees C)
+    checks:
+      - name: min
+        value: -100
   - name: TSUN
     type: float
     description: Daily total sunshine (minutes)
+    checks:
+      - name: min
+        value: 0
   - name: WDF1
     type: float
     description: Direction of fastest 1-minute wind (degrees)
+    checks:
+      - name: min
+        value: 0
   - name: WDF2
     type: float
     description: Direction of fastest 2-minute wind (degrees)
+    checks:
+      - name: min
+        value: 0
   - name: WDF5
     type: float
     description: Direction of fastest 5-second wind (degrees)
+    checks:
+      - name: min
+        value: 0
   - name: WDFG
     type: float
     description: Direction of peak wind gust (degrees)
+    checks:
+      - name: min
+        value: 0
   - name: WDFI
     type: float
     description: Direction of highest instantaneous wind (degrees)
+    checks:
+      - name: min
+        value: 0
   - name: WDFM
     type: float
     description: Fastest mile wind direction (degrees)
+    checks:
+      - name: min
+        value: 0
   - name: WDMV
     type: float
     description: 24-hour wind movement (km)
+    checks:
+      - name: min
+        value: 0
   - name: WESD
     type: float
     description: Water equivalent of snow on the ground (mm)
+    checks:
+      - name: min
+        value: 0
   - name: WESF
     type: float
     description: Water equivalent of snowfall (mm)
+    checks:
+      - name: min
+        value: 0
   - name: WSF1
     type: float
     description: Fastest 1-minute wind speed (meters per second)
+    checks:
+      - name: min
+        value: 0
   - name: WSF2
     type: float
     description: Fastest 2-minute wind speed (meters per second)
+    checks:
+      - name: min
+        value: 0
   - name: WSF5
     type: float
     description: Fastest 5-second wind speed (meters per second)
+    checks:
+      - name: min
+        value: 0
   - name: WSFG
     type: float
     description: Peak gust wind speed (meters per second)
+    checks:
+      - name: min
+        value: 0
   - name: WSFI
     type: float
     description: Highest instantaneous wind speed (meters per second)
+    checks:
+      - name: min
+        value: 0
   - name: WSFM
     type: float
     description: Fastest mile wind speed (meters per second)
+    checks:
+      - name: min
+        value: 0
   - name: WT01
     type: boolean
     description: Fog, ice fog, or freezing fog (may include heavy fog)
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT02
     type: boolean
     description: Heavy fog or heaving freezing fog (not always distinguished from fog)
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT03
     type: boolean
     description: Thunder
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT04
     type: boolean
     description: Ice pellets, sleet, snow pellets, or small hail
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT05
     type: boolean
     description: Hail (may include small hail)
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT06
     type: boolean
     description: Glaze or rime
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT07
     type: boolean
     description: Dust, volcanic ash, blowing dust, blowing sand, or blowing obstruction
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT08
     type: boolean
     description: Smoke or haze
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT09
     type: boolean
     description: Blowing or drifting snow
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT10
     type: boolean
     description: Tornado, waterspout, or funnel cloud
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT11
     type: boolean
     description: High or damaging winds
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT12
     type: boolean
     description: Blowing spray
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT13
     type: boolean
     description: Mist
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT14
     type: boolean
     description: Drizzle
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT15
     type: boolean
     description: Freezing drizzle
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT16
     type: boolean
     description: Rain (may include freezing rain, drizzle, and freezing drizzle)
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT17
     type: boolean
     description: Freezing rain
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT18
     type: boolean
     description: Snow, snow pellets, snow grains, or ice crystals
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT19
     type: boolean
     description: Unknown source of precipitation
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT20
     type: boolean
     description: Ground fog
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT21
     type: boolean
     description: Ground fog
+    checks:
+      - name: accepted_values
+        value: [true, false]
   - name: WT22
     type: boolean
     description: Ice fog or freezing fog
-  - name: source_priority
-    type: varchar
-    description: Priority source used for conflict resolution
+    checks:
+      - name: accepted_values
+        value: [true, false]
 @bruin */
 
 WITH source_data AS (
@@ -352,8 +551,7 @@ base_records AS (
         WT19,
         WT20,
         WT21,
-        WT22,
-        source_priority
+        WT22
     FROM source_data
 ),
 
@@ -430,8 +628,7 @@ combined AS (
         b.WT19,
         b.WT20,
         b.WT21,
-        b.WT22,
-        b.source_priority
+        b.WT22
     FROM base_records b
     FULL OUTER JOIN multiday_aggregated m
         ON b.date = m.date AND b.station_id = m.station_id
