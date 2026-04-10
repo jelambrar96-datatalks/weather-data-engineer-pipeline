@@ -435,6 +435,12 @@ columns:
     checks:
       - name: accepted_values
         value: [true, false]
+
+custom_checks:
+  - name: all rows are unique
+    value: 1
+    query: SELECT case when count (*) = count(DISTINCT id) then 1 else 0 end as result FROM staging.a02_pivot_transformed_data
+
 @bruin */
 
 WITH source_data AS (
