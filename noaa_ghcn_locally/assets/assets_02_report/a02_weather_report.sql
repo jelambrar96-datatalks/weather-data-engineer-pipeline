@@ -2,6 +2,8 @@
 name: report.a02_weather_report
 type: duckdb.sql
 connection: noaa_duckdb
+description: Weather report
+owner: "jelambrar@gmail.com"
 
 materialization:
   type: view
@@ -10,21 +12,47 @@ depends:
   - report.a01_temp_report
 
 columns:
+  - name: id
+    type: integer
+    description: Unique identifier
+    checks:
+      - name: not_null
+    primary_key: true
   - name: station_id
     type: varchar
     description: Station ID
+    checks:
+      - name: not_null
   - name: station_name
     type: varchar
     description: Station name
+    checks:
+      - name: not_null
   - name: latitude
     type: float
     description: Station latitude
+    checks:
+      - name: not_null
+      - name: min
+        value: -90
+      - name: max
+        value: 90
   - name: longitude
     type: float
     description: Station longitude
+    checks:
+      - name: not_null
+      - name: min
+        value: -180
+      - name: max
+        value: 180
   - name: altitude
     type: float
     description: Station altitude (elevation)
+    checks:
+      - name: not_null
+      - name: min
+        value: -1000
   - name: province
     type: varchar
     description: Province name
@@ -43,35 +71,78 @@ columns:
   - name: date
     type: timestamp
     description: Observation date
+    checks:
+      - name: not_null
   - name: TMIN
     type: float
     description: Minimum temperature
+    checks:
+      - name: min
+        value: -100
   - name: TMAX
     type: float
     description: Maximum temperature
+    checks:
+      - name: min
+        value: -100
   - name: TAVG
     type: float
     description: Average temperature
+    checks:
+      - name: min
+        value: -100
   - name: PRCP
     type: float
     description: Precipitation
+    checks:
+      - name: min
+        value: 0
   - name: SNOW
     type: float
     description: Snowfall
+    checks:
+      - name: min
+        value: 0
   - name: SNWD
     type: float
     description: Snow depth
+    checks:
+      - name: min
+        value: 0
   - name: weather_symbol
     type: varchar
     description: Weather symbol
   - name: climate_code
     type: int
     description: Climate code
+    checks:
+      - name: min
+        value: -2
+      - name: max
+        value: 7
+
+custom_checks:
+  - name: all rows are unique
+    value: 1
+    query: SELECT case when count (*) = count(DISTINCT id) then 1 else 0 end as result FROM report.a02_weather_report
+
+  - name: all weather symbols are valid
+    value: 1
+    query: |
+      SELECT CASE WHEN COUNT(*) = 0 THEN 1 ELSE 0 END
+      FROM (
+          SELECT weather_symbol
+          FROM report.a02_weather_report
+          GROUP BY weather_symbol
+          HAVING COUNT(DISTINCT climate_code) > 1
+      ) AS invalid_mappings
+
 @bruin */
 
 
 
 SELECT
+    id,
     station_id,
     station_name,
     latitude,
@@ -81,7 +152,7 @@ SELECT
     province,
     iso_code,
     iso_cc,
-    iso_sub
+    iso_sub,
     date,
     TMIN,
     TMAX,
