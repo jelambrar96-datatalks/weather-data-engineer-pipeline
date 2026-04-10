@@ -56,15 +56,23 @@ columns:
   - name: province
     type: varchar
     description: Province name
+    checks:
+      - name: not_null
   - name: country
     type: varchar
     description: Country name
+    checks:
+      - name: not_null
   - name: iso_code
     type: varchar
     description: ISO code
+    checks:
+      - name: not_null
   - name: iso_cc
     type: varchar
     description: ISO country code
+    checks:
+      - name: not_null
   - name: iso_sub
     type: varchar
     description: ISO subdivision code
