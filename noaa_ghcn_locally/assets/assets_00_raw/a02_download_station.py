@@ -24,15 +24,19 @@ columns:
       description: "latitude of the station (in decimal degrees)."
       checks:
           - name: not_null
-          - min: -90.0
-          - max: 90.0
+          - name: min
+            value: -90.0
+          - name: max
+            value: 90.0
     - name: longitude
       type: float
       description: "longitude of the station (in decimal degrees)."
       checks:
           - name: not_null
-          - min: -180.0
-          - max: 180.0
+          - name: min
+            value: -180.0
+          - name: max
+            value: 180.0
     - name: elevation
       type: float
       description: "elevation of the station in meters."

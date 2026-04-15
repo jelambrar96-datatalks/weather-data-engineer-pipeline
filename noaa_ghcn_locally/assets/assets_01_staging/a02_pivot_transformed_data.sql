@@ -445,7 +445,10 @@ custom_checks:
 
 WITH source_data AS (
     SELECT * FROM staging.a01_pivot_data
-    WHERE date IS NOT NULL AND station_id IS NOT NULL
+    WHERE 1 = 1 
+        AND date IS NOT NULL AND station_id IS NOT NULL
+        AND date >= '{{ start_date }}' 
+        AND date <= '{{ end_date }}'
 ),
 
 -- Expand multiday records into individual days

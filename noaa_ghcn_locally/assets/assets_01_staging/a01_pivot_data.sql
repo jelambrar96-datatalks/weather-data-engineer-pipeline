@@ -575,6 +575,8 @@ WITH raw_data AS (
             (element LIKE 'WT%' AND TRY_CAST(value AS VARCHAR) IN ('0', '1', 'true', 'false')) OR
             (element IN ('FMTM', 'PGTM', 'GAHT')) -- Elements without specific range checks in metadata
         )
+        AND date >= '{{ start_date }}' 
+        AND date <= '{{ end_date }}'
 ),
 prioritized_data AS (
     SELECT
