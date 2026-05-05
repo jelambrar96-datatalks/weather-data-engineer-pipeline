@@ -183,7 +183,38 @@ All pipeline data is persisted in DuckDB through the Bruin connection `noaa_duck
 
 ## 7. Data visualization: Streamlit Dashboard
 
+To launch the interactive dashboard, follow these steps to set up your environment:
 
+1. **Navigate to the streamlit directory**:
+
+```bash
+cd streamlit
+```
+
+2. **Configure environment variables**:
+   Create a `.env` file from the provided sample:
+
+```bash
+cp sample.env .env
+```
+
+3. **Set up environment and run**:
+   Create a virtual environment using `uv` and start the dashboard:
+
+```bash
+uv venv
+uv run streamlit run app.py
+```
+
+4. **Access the dashboard**:
+   Open your web browser and navigate to the URL provided by Streamlit (usually `http://localhost:8501`).
+
+5. **Explore the data**:
+   Use the interactive widgets to filter data by country, state, and date range, and explore climate patterns through visualizations.
+
+![dashboard](media/dashboard-01.png)
+
+![dashboard](media/dashboard-02.png)
 
 ## 8. Project Structure
 
