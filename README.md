@@ -23,15 +23,18 @@ To harness the full potential of this vast dataset, a robust data engineering pi
 In this project, we utilize [Bruin](https://getbruin.com/) as an end-to-end data pipeline platform to **orchestrate** the entire workflow from data ingestion to visualization. Bruin enables automated scheduling, quality checks, and transformations, ensuring reliable and efficient data processing.
 
 ### Data Storage: DuckDB
+
 We store the processed data in DuckDB, an embedded analytical database designed for fast querying and analytics.
 
 **Advantages of DuckDB:**
+
 - High performance for analytical queries without requiring a separate database server.
 - In-memory processing capabilities for quick data manipulation.
 - Lightweight and easy to integrate into data pipelines.
 - Supports SQL queries and is compatible with various data formats.
 
 ### Data Visualization: Streamlit
+
 For data visualization, we use Streamlit to build interactive dashboards that allow users to explore climate patterns and insights.
 
 **Advantages of Streamlit:**
@@ -43,6 +46,16 @@ For data visualization, we use Streamlit to build interactive dashboards that al
 This local solution provides a complete, self-contained environment for climate data analysis.
 
 ## 3. Proposed Cloud solution
+
+In addition to the local setup, this project includes a cloud-native pipeline (`noaa_ghcn_cloud`) that follows the same data flow but is optimized for execution in the cloud using **MotherDuck**.
+
+### 3.1. Cloud Authentication: MotherDuck
+
+To execute the cloud pipeline, you must provide a MotherDuck API token. This token should be configured in the following files:
+- `terraform/terraform.tfvars`: Set the `motherduck_token` variable to your API token.
+- `.bruin.yml`: Update the `token` field under the `motherduck` connection for both `default` and `dev` environments.
+
+This allows for a seamless transition from local development (DuckDB) to cloud-scale storage and analysis (MotherDuck).
 
 ## 4. Batch Data Workflow
 
