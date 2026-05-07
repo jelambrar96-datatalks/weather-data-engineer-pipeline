@@ -194,6 +194,8 @@ All pipeline data is persisted in DuckDB through the Bruin connection `noaa_duck
 
 ## 6. Transformations
 
+For data transformations, this project utilizes Bruin, which serves as an alternative to dbt. Bruin enables SQL-based transformations, data quality checks, and automated pipeline execution, providing a streamlined approach to transforming raw data into analysis-ready formats.
+
 ## 7. Data visualization: Streamlit Dashboard
 
 To launch the interactive dashboard, follow these steps to set up your environment:
